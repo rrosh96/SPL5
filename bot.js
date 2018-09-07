@@ -1,3 +1,5 @@
+import { close } from 'fs';
+
 /*
  * bot.js
  *
@@ -115,6 +117,22 @@ class Bot {
         ]
     }
 
+    findTopPositions (cellPos, step) {
+        return [
+            [cellPos[0] - step, cellPos[1]],
+            [cellPos[0] - step, cellPos[1] - step],
+            [cellPos[0] - step, cellPos[1] + step],
+        ]
+    }
+
+    findBottomPositions (cellPos, step) {
+        return [
+            [cellPos[0] + step, cellPos[1]],
+            [cellPos[0] + step, cellPos[1] - step],
+            [cellPos[0] + step, cellPos[1] + step]
+        ]
+    }
+
     findNumberOfOpps(cellpos, myID){
         let adjPostions = this.findAllPositions(cellpos, 1);
         let filter1 = this.filterOutOfBoundaryMoves(adjPostions);
@@ -164,6 +182,78 @@ class Bot {
         return maxKillObj;
     }
 
+    moveTowardsTop (cellPos, myID, oppID) {
+        let topPositions = this.findTopPositions(cellPos, 1);
+        let filter1 = this.filterOutOfBoundaryMoves(topPositions);
+        let filter2 = this.filterById(myID, oppID, -1);
+        return filter2;
+    }
+
+    moveTowardsBottom (cellPos, myID, oppID) {
+        let bottomPosition = this.findBottomPositions(cellPos, 1);
+        let filter1 = this.filterOutOfBoundaryMoves(bottomPosition);
+        let filter2 = this.filterById(myID, oppID, -1);
+        return filter2;
+    }
+
+    findClosestToOpp (myPositionsArr, myID, oppID) {
+        let closestPos = [];
+        let size = myPositionsArr.length;
+        let retArr = [];
+        let self = this;
+
+        {
+            if (myID === 1) {
+                let minVal = self.request.boardInfo.length;
+                for (let i=0; i<size; i++) {
+                    for (let j=0; j<size; j++) {
+                        if (i < minVal) {
+                            minVal = i;
+                            retArr = [];
+                            retArr.push[i,j];
+                        } else if (i === minVal) {
+                            retArr.push[i,j];
+                        }
+                    }
+                }
+
+                retArr.forEach(function (pos) {
+                    let move = self.moveTowardsTop(pos, myID, oppID);
+                    if (move.length !== 0) {
+                        return {
+                            fromPos: pos,
+                            toPos: move[0],
+                        }
+                    }
+                });
+
+            } else {
+                let maxVal = 0;
+                for (let i=size-1; i>=0; i--) {
+                    for (let j=size-1; j>=0; j--) {
+                        if (i > maxVal) {
+                            maxVal = i;
+                            retArr = [];
+                            retArr.push[i,j];
+                        } else if (i === maxVal) {
+                            retArr.push[i,j];
+                        }
+                    }
+                }
+                retArr.forEach(function (pos) {
+                    let move = self.moveTowardsBottom (pos, myID, oppID);
+                    if (move.length !== 0) {
+                        return {
+                            fromPos: pos,
+                            toPos: move[0],
+                        }
+                    }
+                });
+            }
+            return "Failed";
+        }
+    }
+
     // findPossibleMoves (cellPos, step) {
     //     return this.findOnlyPossibePositions(cellPos, step);
     // }
@@ -205,6 +295,17 @@ class Bot {
                 toCell: canAttack.toCell // [1,2]
             }
         }
+        // Move towards opponent Logic
+        let closeMove = this.findClosestToOpp (myPositionsArr, myID, oppID);
+        if (closeMove !== "Failed") {
+            return {
+                dataType: "response",
+                fromCell: closeMove.fromPos, //[6,0]
+                toCell: closeMove.toPos // [1,2]
+            }
+        }
+
+
         //Killer Logic
         
         while(movesArr.length == 0) {
