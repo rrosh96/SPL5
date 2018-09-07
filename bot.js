@@ -40,8 +40,8 @@ class Bot {
                     break;
             }
         } catch (err) {
-            console.error("Error processing request");
-            console.error(err);
+            
+            
         }
     }
 
@@ -56,11 +56,11 @@ class Bot {
     }
 
     acknowledgement(data) {
-        console.log("Ack :: status :", data.message);
+        
     }
 
     result(data) {
-        console.log("Game over ::", data.result);
+        
     }
 
 
@@ -116,60 +116,85 @@ class Bot {
     }
 
     //Returns only the possible positions from the cellPos
-    findOnlyPossibePositions (cellPos, step) {
+    findOnlyPossibePositions (cellPos, step, myID, oppID ) {
+
         // getAll possible moves 
         let allPos = this.findAllPositions(cellPos, step);
 
         let filter1 = this.filterOutOfBoundaryMoves(allPos);
         
         // filter by both opp bot id and block id
-        let filter2 = this.filterById(filter1, [2, -1]);
+        let filter2 = this.filterById(filter1, [myID, oppID, -1]);
         return filter2;
     }
 
-    findPossibleMoves (cellPos, step) {
-        return this.findOnlyPossibePositions(cellPos, step);
-    }
+    // findPossibleMoves (cellPos, step) {
+    //     return this.findOnlyPossibePositions(cellPos, step);
+    // }
 
 
 
-
+    /* wife(myID, oppID, myPositionsArr, movesArr){
+        let myRandomPos = myPositionsArr[Math.floor(Math.random()* myPositionsArr.length)];
+        let myRandomMove = movesArr[Math.floor(Math.random()* movesArr.length)];
+        return myRandomMove;
+    } */
 
     
     // takes request as param
     // return complete respons object 
-    whatsMyMove(){
+    wife(){
+
+
         // assign variable to freq used params, myID, oppID 
         let myID = this.request.yourID;
-        let oppID = 3 % myID;
+        let oppID = myID === 1 ? 2: 1;
+        let size = this.request.boardInfo.length, 
+            movesArr = [],
+            myRandomPos = [],
+            myRandomMove = [];
+
+
+
         // return object  of Bot Position for the corresponding ID 
         // obj = {myID : [], oppID : []}
-        this.findBotPositions([1,2]);
+        let myPositionsArr = this.findBotPositions([myID]);
 
-        // // cellPosition can be my cell or opponent Cell
-        // // step = 1 for clone, step =2 for jump
-        let moves = this.findPossibleMoves([6,0], 1) 
 
-        // // add Decision making logic here 
-        this.wife();
+        //RandomLogic
+        while(movesArr.length == 0) {
+            myRandomPos = myPositionsArr[myID][Math.floor(Math.random() * myPositionsArr[myID].length)];
+            movesArr = this.findOnlyPossibePositions(myRandomPos, 1, myID, oppID);
+            if(movesArr.length === 0){
+                movesArr.push(...this.findOnlyPossibePositions(myRandomPos, 2, myID, oppID));
+            }
+            if(movesArr.length ===0){
+                console.info("MyRandomMove is empty", "->moves Arr ", movesArr, "-MyRandomPos :", myRandomPos )
+            } else {
+                myRandomMove = movesArr[Math.floor(Math.random()* movesArr.length)];
+            }
+
+        }
+        return {
+            dataType: "response",
+            fromCell: myRandomPos, //[6,0]
+            toCell: myRandomMove // [1,2]
+        }
     }
     
     move(request) {
-        console.log("Request move:", request.boardInfo);
+        
         this.request = request;
         //
         // ** Move logic here. **
         //
 
-        this.whatsMyMove();
+        //this.whatsMyMove();
         
-        let response = {
-            dataType: "response",
-            fromCell: [2, 2],
-            toCell: [2, 4],
-        };
 
-        console.log("Respond move:", response);
+        let response = this.wife();
+
+        
         this.splClient.respond(response);
     }
     
