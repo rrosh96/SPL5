@@ -69,6 +69,8 @@ class Bot {
         //
         // ** Move logic here. **
         //
+
+        
         
         let response = {
             dataType: "response",
@@ -78,6 +80,23 @@ class Bot {
 
         console.log("Respond move:", response);
         this.splClient.respond(response);
+    }
+
+    // takes request as param
+    // return complete respons object 
+    whatsMyMove(request){
+        // assign variable to freq used params, myID, oppID 
+
+        // return object  of Bot Position for the corresponding ID 
+        // obj = {myID : [], oppID : []}
+        this.findBotPositions(idArray);
+
+        // cellPosition can be my cell or opponent Cell
+        // step = 1 for clone, step =2 for jump
+        this.findPossibleMoves(cellPos, step) 
+
+        // add Decision making logic here 
+        this.wife();
     }
 }
 
