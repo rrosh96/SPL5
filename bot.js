@@ -104,16 +104,39 @@ class Bot {
 
     //Returns all position relative to cellPos and step from cellPos
     findAllPositions (cellPos, step) {
-        return [
-            [cellPos[0] - step, cellPos[1] - step],
-            [cellPos[0] - step, cellPos[1]],
-            [cellPos[0] - step, cellPos[1] + step],
-            [cellPos[0], cellPos[1] - step],
-            [cellPos[0], cellPos[1] + step],
-            [cellPos[0] + step, cellPos[1] - step],
-            [cellPos[0] + step, cellPos[1]],
-            [cellPos[0] + step, cellPos[1] + step]
-        ]
+        if(step ===1 ){
+
+            return [
+                [cellPos[0] - step, cellPos[1] - step],
+                [cellPos[0] - step, cellPos[1]],
+                [cellPos[0] - step, cellPos[1] + step],
+                [cellPos[0], cellPos[1] - step],
+                [cellPos[0], cellPos[1] + step],
+                [cellPos[0] + step, cellPos[1] - step],
+                [cellPos[0] + step, cellPos[1]],
+                [cellPos[0] + step, cellPos[1] + step]
+            ]
+        } else {
+             return [
+                [cellPos[0] - 2, cellPos[1] - 2],
+                [cellPos[0] - 2, cellPos[1] - 1],
+                [cellPos[0] - 2, cellPos[1]],
+                [cellPos[0] - 2, cellPos[1] + 1],
+                [cellPos[0] - 2, cellPos[1] + 2],
+                [cellPos[0] - 1, cellPos[1] - 2],
+                [cellPos[0] - 1, cellPos[1] + 2],
+                [cellPos[0], cellPos[1] - 2],
+                [cellPos[0], cellPos[1] + 2],
+                [cellPos[0] + 1, cellPos[1] - 2],
+                [cellPos[0] + 1, cellPos[1] + 2],
+                [cellPos[0] + 2, cellPos[1] - 2],
+                [cellPos[0] + 2, cellPos[1] - 1],
+                [cellPos[0] + 2, cellPos[1]],
+                [cellPos[0] + 2, cellPos[1] + 1],
+                [cellPos[0] + 2, cellPos[1] + 2],
+            ]
+        }
+
     }
 
     findTopPositions (cellPos, step) {
@@ -160,6 +183,12 @@ class Bot {
             max: 0,
             fromCell: [], //[6,0]
             toCell: [] // [1,2]
+        };
+        let maxJumpKillObj = {
+            max: 0,
+            suicide : 9,
+            fromCell: [], //[6,0]
+            toCell: []
         }
 
         myPositionsArr[myID].forEach(function(pos){
@@ -176,22 +205,34 @@ class Bot {
                 }
                  
             })
+        });
 
+        myPositionsArr[myID].forEach(function(pos){
             let movesArrJump = self.findOnlyPossibePositions(pos, 2, myID, oppID);
             movesArrJump.forEach(function(move){
                 
                 // find all adj positon of this move and filter by ourID and block in order to find the max Kills
-                let killCount = self.findNumberOfOpps(move, myID)
-                if(killCount > (maxKillObj.max+1)){
-                    maxKillObj.max = killCount;
-                    maxKillObj.fromCell = pos;
-                    maxKillObj.toCell = move;
+                let killCount = self.findNumberOfOpps(move, myID);
+                // find all adf positoin of current pos and filter out their ID and blocks.
+                let suicideCount = self.findNumberOfOpps(pos, oppID);
+
+                if(killCount > (maxJumpKillObj.max)){
+                    if(suicideCount < maxJumpKillObj.suicide){
+                        maxJumpKillObj.suicide = suicideCount;
+                        maxJumpKillObj.max = killCount;
+                        maxJumpKillObj.fromCell = pos;
+                        maxJumpKillObj.toCell = move;
+                    }
                 }
                  
             })
 
-        })
-        return maxKillObj;
+        });
+        if (maxJumpKillObj.max > 1 + maxKillObj.max) {
+            return maxJumpKillObj;
+        } else {
+            return maxKillObj;
+        }
     }
 
     moveTowardsTop (cellPos, myID, oppID) {
