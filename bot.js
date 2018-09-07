@@ -1,4 +1,3 @@
-import { close } from 'fs';
 
 /*
  * bot.js
@@ -164,9 +163,9 @@ class Bot {
         }
 
         myPositionsArr[myID].forEach(function(pos){
-            let movesArr =  self.findOnlyPossibePositions(pos, 1, myID, oppID);
-            movesArr.push(...self.findOnlyPossibePositions(pos, 2, myID, oppID));
-            movesArr.forEach(function(move){
+            let movesArrClone =  self.findOnlyPossibePositions(pos, 1, myID, oppID);
+            // movesArr.push(...self.findOnlyPossibePositions(pos, 2, myID, oppID));
+            movesArrClone.forEach(function(move){
                 
                 // find all adj positon of this move and filter by ourID and block in order to find the max Kills
                 let killCount = self.findNumberOfOpps(move, myID)
@@ -177,8 +176,21 @@ class Bot {
                 }
                  
             })
-        })
 
+            let movesArrJump = self.findOnlyPossibePositions(pos, 2, myID, oppID);
+            movesArrJump.forEach(function(move){
+                
+                // find all adj positon of this move and filter by ourID and block in order to find the max Kills
+                let killCount = self.findNumberOfOpps(move, myID)
+                if(killCount > (maxKillObj.max+1)){
+                    maxKillObj.max = killCount;
+                    maxKillObj.fromCell = pos;
+                    maxKillObj.toCell = move;
+                }
+                 
+            })
+
+        })
         return maxKillObj;
     }
 
@@ -254,6 +266,75 @@ class Bot {
         }
     }
 
+
+    fillAdjacentGrid(myPositionsArr,  myID, oppID){
+        let size = this.request.boardInfo.length;
+        let self = this;
+        let returnObj = undefined;
+        if(myID === 1){
+            for(let i = size-1; i >= 0; i--){
+                for(let j = 0; j< size; j++){
+                    let movesArr = [];
+                    
+                    myPositionsArr[myID].every(function(pos){
+                        movesArr = self.findOnlyPossibePositions(pos, 1, myID, oppID);
+                        let a = JSON.stringify(movesArr);
+                        let b = "[" + i.toString() + "," + j.toString() + "]";
+                        if(a.indexOf(b) !== -1){
+                           returnObj = {
+                                dataType: "response",
+                                fromCell: pos, //[6,0]
+                                toCell: [i,j] // [1,2]
+                            };
+                            return false;
+                        }else {
+                            return true;
+                        }
+                    })
+                    
+                    if(typeof returnObj !== "undefined"){
+                        break;
+                    }    
+                    
+                }
+                if(typeof returnObj !== "undefined"){
+                    break;
+                }  
+            }
+        } else {
+            for(let i = 0; i < size; i++){
+                for(let j = size-1; j >=0; j--){
+                    let movesArr = [];
+                    
+                    myPositionsArr[myID].every(function(pos){
+                        movesArr = self.findOnlyPossibePositions(pos, 1, myID, oppID);
+                        let a = JSON.stringify(movesArr);
+                        let b = "[" + i.toString() + "," + j.toString() + "]";
+                        if(a.indexOf(b) !== -1){
+                           returnObj = {
+                                dataType: "response",
+                                fromCell: pos, //[6,0]
+                                toCell: [i,j] // [1,2]
+                            };
+                            return false;
+                        }else {
+                            return true;
+                        }
+                    })
+                    
+                    if(typeof returnObj !== "undefined"){
+                        break;
+                    }    
+                    
+                }
+                if(typeof returnObj !== "undefined"){
+                    break;
+                }  
+            }
+        }
+
+        return returnObj;
+    }
     // findPossibleMoves (cellPos, step) {
     //     return this.findOnlyPossibePositions(cellPos, step);
     // }
@@ -294,41 +375,40 @@ class Bot {
                 fromCell: canAttack.fromCell, //[6,0]
                 toCell: canAttack.toCell // [1,2]
             }
+        } else {
+            return this.fillAdjacentGrid(myPositionsArr,  myID, oppID);
         }
         // Move towards opponent Logic
-        let closeMove = this.findClosestToOpp (myPositionsArr, myID, oppID);
-        if (closeMove !== "Failed") {
-            return {
-                dataType: "response",
-                fromCell: closeMove.fromPos, //[6,0]
-                toCell: closeMove.toPos // [1,2]
-            }
-        }
+        // let closeMove = this.findClosestToOpp (myPositionsArr, myID, oppID);
+        // if (closeMove !== "Failed") {
+        //     return {
+        //         dataType: "response",
+        //         fromCell: closeMove.fromPos, //[6,0]
+        //         toCell: closeMove.toPos // [1,2]
+        //     }
+        // }
 
 
         //Killer Logic
         
-        while(movesArr.length == 0) {
-            myRandomPos = myPositionsArr[myID][Math.floor(Math.random() * myPositionsArr[myID].length)];
-            movesArr = this.findOnlyPossibePositions(myRandomPos, 1, myID, oppID);
-            if(movesArr.length === 0){
-                // movesArr.push(...this.findOnlyPossibePositions(myRandomPos, 2, myID, oppID));
-            }
-            if(movesArr.length ===0){
-                console.info("MyRandomMove is empty", "->moves Arr ", movesArr, "-MyRandomPos :", myRandomPos )
-            } else {
-                myRandomMove = movesArr[Math.floor(Math.random()* movesArr.length)];
-            }
+        // while(movesArr.length == 0) {
+        //     myRandomPos = myPositionsArr[myID][Math.floor(Math.random() * myPositionsArr[myID].length)];
+        //     movesArr = this.findOnlyPossibePositions(myRandomPos, 1, myID, oppID);
+        //     if(movesArr.length === 0){
+        //         // movesArr.push(...this.findOnlyPossibePositions(myRandomPos, 2, myID, oppID));
+        //     }
+        //     if(movesArr.length ===0){
+        //         console.info("MyRandomMove is empty", "->moves Arr ", movesArr, "-MyRandomPos :", myRandomPos )
+        //     } else {
+        //         myRandomMove = movesArr[Math.floor(Math.random()* movesArr.length)];
+        //     }
 
-        }
-
-        // Attack Logic
- 
-        return {
-            dataType: "response",
-            fromCell: myRandomPos, //[6,0]
-            toCell: myRandomMove // [1,2]
-        }
+        // }
+        // return {
+        //     dataType: "response",
+        //     fromCell: myRandomPos, //[6,0]
+        //     toCell: myRandomMove // [1,2]
+        // }
     }
     
     move(request) {
