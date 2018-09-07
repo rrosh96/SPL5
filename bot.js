@@ -211,7 +211,7 @@ class Bot {
             myRandomPos = myPositionsArr[myID][Math.floor(Math.random() * myPositionsArr[myID].length)];
             movesArr = this.findOnlyPossibePositions(myRandomPos, 1, myID, oppID);
             if(movesArr.length === 0){
-                movesArr.push(...this.findOnlyPossibePositions(myRandomPos, 2, myID, oppID));
+                // movesArr.push(...this.findOnlyPossibePositions(myRandomPos, 2, myID, oppID));
             }
             if(movesArr.length ===0){
                 console.info("MyRandomMove is empty", "->moves Arr ", movesArr, "-MyRandomPos :", myRandomPos )
