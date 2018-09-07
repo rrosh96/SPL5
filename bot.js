@@ -115,6 +115,14 @@ class Bot {
         ]
     }
 
+    findNumberOfOpps(cellpos, myID){
+        let adjPostions = this.findAllPositions(cellpos, 1);
+        let filter1 = this.filterOutOfBoundaryMoves(adjPostions);
+        let filter2 = this.filterById(filter1, [myID, -1, 0]);
+
+        return filter2.length;
+    }
+
     //Returns only the possible positions from the cellPos
     findOnlyPossibePositions (cellPos, step, myID, oppID ) {
 
@@ -126,6 +134,34 @@ class Bot {
         // filter by both opp bot id and block id
         let filter2 = this.filterById(filter1, [myID, oppID, -1]);
         return filter2;
+    }
+
+    shallWeAttack(myPositionsArr,myID, oppID){
+         // Attack Logic
+         let self = this;
+         let maxKillObj = {
+            max: 0,
+            fromCell: [], //[6,0]
+            toCell: [] // [1,2]
+        }
+
+        myPositionsArr[myID].forEach(function(pos){
+            let movesArr =  self.findOnlyPossibePositions(pos, 1, myID, oppID);
+            movesArr.push(...self.findOnlyPossibePositions(pos, 2, myID, oppID));
+            movesArr.forEach(function(move){
+                
+                // find all adj positon of this move and filter by ourID and block in order to find the max Kills
+                let killCount = self.findNumberOfOpps(move, myID)
+                if(killCount > maxKillObj.max){
+                    maxKillObj.max = killCount;
+                    maxKillObj.fromCell = pos;
+                    maxKillObj.toCell = move;
+                }
+                 
+            })
+        })
+
+        return maxKillObj;
     }
 
     // findPossibleMoves (cellPos, step) {
@@ -160,8 +196,17 @@ class Bot {
         // obj = {myID : [], oppID : []}
         let myPositionsArr = this.findBotPositions([myID]);
 
+        let canAttack = this.shallWeAttack(myPositionsArr,myID, oppID);
 
-        //RandomLogic
+        if(canAttack.max !== 0){   
+            return {
+                dataType: "response",
+                fromCell: canAttack.fromCell, //[6,0]
+                toCell: canAttack.toCell // [1,2]
+            }
+        }
+        //Killer Logic
+        
         while(movesArr.length == 0) {
             myRandomPos = myPositionsArr[myID][Math.floor(Math.random() * myPositionsArr[myID].length)];
             movesArr = this.findOnlyPossibePositions(myRandomPos, 1, myID, oppID);
@@ -175,6 +220,9 @@ class Bot {
             }
 
         }
+
+        // Attack Logic
+ 
         return {
             dataType: "response",
             fromCell: myRandomPos, //[6,0]
