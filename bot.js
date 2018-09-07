@@ -186,7 +186,7 @@ class Bot {
         };
         let maxJumpKillObj = {
             max: 0,
-            suicide : 9,
+            suicideDiff : 0,
             fromCell: [], //[6,0]
             toCell: []
         }
@@ -215,10 +215,10 @@ class Bot {
                 let killCount = self.findNumberOfOpps(move, myID);
                 // find all adf positoin of current pos and filter out their ID and blocks.
                 let suicideCount = self.findNumberOfOpps(pos, oppID);
-
+                let suicideDiff = killCount - suicideCount;
                 if(killCount > (maxJumpKillObj.max)){
-                    if(suicideCount < maxJumpKillObj.suicide){
-                        maxJumpKillObj.suicide = suicideCount;
+                    if((suicideDiff > 0) &&  (suicideDiff > maxJumpKillObj.suicideDiff)){
+                        maxJumpKillObj.suicideDiff = suicideDiff;
                         maxJumpKillObj.max = killCount;
                         maxJumpKillObj.fromCell = pos;
                         maxJumpKillObj.toCell = move;
@@ -233,6 +233,36 @@ class Bot {
         } else {
             return maxKillObj;
         }
+    }
+
+    lastResort (myPositionsArr, myID, oppID) {
+        let self = this;
+        let maxJumpKillObj = {
+            max: 0,
+            suicideDiff : -9,
+            fromCell: [],
+            toCell: []
+        }
+        myPositionsArr[myID].forEach(function(pos){
+            let movesArrJump = self.findOnlyPossibePositions(pos, 2, myID, oppID);
+            movesArrJump.forEach(function(move){
+                
+                // find all adj positon of this move and filter by ourID and block in order to find the max Kills
+                let killCount = self.findNumberOfOpps(move, myID);
+                // find all adf positoin of current pos and filter out their ID and blocks.
+                let suicideCount = self.findNumberOfOpps(pos, oppID);
+                let suicideDiff = killCount - suicideCount;
+                if(killCount > (maxJumpKillObj.max)){
+                    if((suicideDiff > maxJumpKillObj.suicideDiff)){
+                        maxJumpKillObj.suicideDiff = suicideDiff;
+                        maxJumpKillObj.max = killCount;
+                        maxJumpKillObj.fromCell = pos;
+                        maxJumpKillObj.toCell = move;
+                    }
+                }
+            })
+        });
+        return maxJumpKillObj;
     }
 
     moveTowardsTop (cellPos, myID, oppID) {
@@ -417,7 +447,17 @@ class Bot {
                 toCell: canAttack.toCell // [1,2]
             }
         } else {
-            return this.fillAdjacentGrid(myPositionsArr,  myID, oppID);
+            let adjacentGrid = this.fillAdjacentGrid(myPositionsArr,  myID, oppID);
+            if (typeof adjacentGrid === "undefined") {
+                let lastJump = this.lastResort(myPositionsArr,  myID, oppID);
+                return {
+                        dataType: "response",
+                        fromCell: lastJump.fromCell, //[6,0]
+                        toCell: lastJump.toCell // [1,2]
+                    };
+            } else {
+                return adjacentGrid;
+            }
         }
         // Move towards opponent Logic
         // let closeMove = this.findClosestToOpp (myPositionsArr, myID, oppID);
