@@ -216,7 +216,7 @@ class Bot {
                 // find all adf positoin of current pos and filter out their ID and blocks.
                 let suicideCount = self.findNumberOfOpps(pos, oppID);
                 let suicideDiff = killCount - suicideCount;
-                if(killCount > (maxJumpKillObj.max)){
+                if(killCount >= (maxJumpKillObj.max)){
                     if((suicideDiff > 0) &&  (suicideDiff > maxJumpKillObj.suicideDiff)){
                         maxJumpKillObj.suicideDiff = suicideDiff;
                         maxJumpKillObj.max = killCount;
@@ -228,7 +228,7 @@ class Bot {
             })
 
         });
-        if (maxJumpKillObj.max > 1 + maxKillObj.max) {
+        if (maxJumpKillObj.max > 2 + maxKillObj.max) {
             return maxJumpKillObj;
         } else {
             return maxKillObj;
@@ -240,9 +240,10 @@ class Bot {
         let maxJumpKillObj = {
             max: 0,
             suicideDiff : -9,
-            fromCell: [],
-            toCell: []
+            fromCell: [0,0],
+            toCell: [0,0]
         }
+
         myPositionsArr[myID].forEach(function(pos){
             let movesArrJump = self.findOnlyPossibePositions(pos, 2, myID, oppID);
             movesArrJump.forEach(function(move){
@@ -252,7 +253,7 @@ class Bot {
                 // find all adf positoin of current pos and filter out their ID and blocks.
                 let suicideCount = self.findNumberOfOpps(pos, oppID);
                 let suicideDiff = killCount - suicideCount;
-                if(killCount > (maxJumpKillObj.max)){
+                if(killCount >= (maxJumpKillObj.max)){
                     if((suicideDiff > maxJumpKillObj.suicideDiff)){
                         maxJumpKillObj.suicideDiff = suicideDiff;
                         maxJumpKillObj.max = killCount;
@@ -342,7 +343,7 @@ class Bot {
         let size = this.request.boardInfo.length;
         let self = this;
         let returnObj = undefined;
-        if(myID === 1){
+        if(myID === 2){
             for(let i = size-1; i >= 0; i--){
                 for(let j = 0; j< size; j++){
                     let movesArr = [];
